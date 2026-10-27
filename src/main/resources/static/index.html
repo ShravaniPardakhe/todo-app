@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Todo App</title>
+<style>
+  body { font-family: Georgia, serif; background:#eef2f5; margin:0; display:flex; justify-content:center; padding:40px 16px; }
+  .box { background:#fff; width:100%; max-width:480px; padding:24px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.08); }
+  h1 { margin-top:0; color:#1f3a4d; }
+  form { display:flex; gap:8px; }
+  input[type=text] { flex:1; padding:10px; border:1px solid #b8c4cc; border-radius:6px; font-size:16px; }
+  button { padding:10px 14px; border:0; background:#1f3a4d; color:#fff; border-radius:6px; cursor:pointer; }
+  ul { list-style:none; padding:0; }
+  li { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #e3e8ec; }
+  li span { flex:1; cursor:pointer; }
+  li.done span { text-decoration:line-through; color:#888; }
+  li button { background:#b3382c; padding:6px 10px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>My Tasks</h1>
+  <form id="f"><input type="text" id="t" placeholder="Add a task" required><button>Add task</button></form>
+  <ul id="list"></ul>
+</div>
+<script>
+const api = '/api/todos';
+async function load() {
+  const todos = await (await fetch(api)).json();
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  todos.forEach(t => {
+    const li = document.createElement('li');
+    if (t.done) li.className = 'done';
+    const s = document.createElement('span');
+    s.textContent = t.title;
+    s.onclick = async () => { await fetch(api + '/' + t.id, {method:'PUT'}); load(); };
+    const b = document.createElement('button');
+    b.textContent = 'Delete';
+    b.onclick = async () => { await fetch(api + '/' + t.id, {method:'DELETE'}); load(); };
+    li.append(s, b);
+    list.append(li);
+  });
+}
+document.getElementById('f').onsubmit = async e => {
+  e.preventDefault();
+  const i = document.getElementById('t');
+  await fetch(api, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({title:i.value, done:false})});
+  i.value = '';
+  load();
+};
+load();
+</script>
+</body>
+</html>
